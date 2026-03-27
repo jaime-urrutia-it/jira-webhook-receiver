@@ -1,9 +1,3 @@
-Excelente pregunta. **Sí, definitivamente deberíamos actualizar ambos READMEs** para presentarlos como una **arquitectura integrada**. Son componentes complementarios de un sistema de sincronización bidireccional.
-
-Aquí tienes el README para el nuevo proyecto, seguido de mis recomendaciones para actualizar el primer proyecto:
-
----
-
 # README: Jira Webhook Receiver
 
 ```markdown
