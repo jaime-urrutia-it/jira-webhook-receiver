@@ -14,7 +14,7 @@ Servicio **Spring Boot** receptor de webhooks para sincronización bidireccional
 Este microservicio actúa como el **puente de entrada** en una arquitectura de sincronización bidireccional:
 
 ```
-┌─────────────────┐         Webhook          ┌──────────────────┐
+```┌─────────────────┐         Webhook          ┌──────────────────┐
 │   JIRA CLOUD    │ ───────────────────────► │  JIRA WEBHOOK    │
 │   (Eventos en   │    HTTP POST (JSON)      │    RECEIVER      │
 │   tiempo real)  │                          │  (Este proyecto) │
@@ -34,7 +34,7 @@ Este microservicio actúa como el **puente de entrada** en una arquitectura de s
                                             │ (Proyecto hermano│
                                             │  - sincroniza    │
                                             │    hacia Jira)   │
-                                            └──────────────────┘
+                                            └──────────────────┘```
 ```
 
 ### Flujo de Trabajo
