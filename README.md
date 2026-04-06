@@ -1,7 +1,7 @@
 Proyecto de recualificación ITSM desarrollado con asistencia de IA generativa. El código fue revisado, comprendido y validado manualmente como parte de un proceso de aprendizaje estructurado en arquitecturas de integración Java/MySQL/Jira
 
 > ℹ️ ¿Eres reclutador y llegaste directamente aquí? 
-> Este proyecto forma parte de mi portfolio completo: bit.ly/yago-itsm-portfolio
+> Este proyecto forma parte de mi portfolio completo: [bit.ly/yago-itsm-portfolio](https://bit.ly/yago-itsm-portfolio)
 > Allí encontrarás contexto, demo visual y mi propuesta de valor como IT Service Coordinator.
 
 # README: Jira Webhook Receiver
