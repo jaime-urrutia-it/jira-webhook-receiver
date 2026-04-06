@@ -1,3 +1,5 @@
+Proyecto de recualificación ITSM desarrollado con asistencia de IA generativa. El código fue revisado, comprendido y validado manualmente como parte de un proceso de aprendizaje estructurado en arquitecturas de integración Java/MySQL/Jira
+
 # README: Jira Webhook Receiver
 
 ```markdown
