@@ -59,7 +59,7 @@ Este microservicio actúa como el **puente de entrada** en una arquitectura de s
 | **Spring Boot** | 3.3.3 | Framework web con Tomcat embebido |
 | **Java** | 17+ | JDK requerido (LTS) |
 | **Spring JDBC** | 3.3.3 | Conectividad simplificada a BD |
-| **MySQL Connector/J** | 8.x | Driver JDBC |
+| **MySQL Connector/J** | 8.x | Driver JDBC oficial |
 | **org.json** | 20231013 | Parseo de payloads JSON |
 | **Logback** | 1.4.x | Logging con rotación de archivos |
 | **Maven** | 3.8+ | Gestión de dependencias |
