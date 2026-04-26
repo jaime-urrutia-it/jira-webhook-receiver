@@ -1,8 +1,16 @@
 Proyecto de recualificación ITSM desarrollado con asistencia de IA generativa. El código fue revisado, comprendido y validado manualmente como parte de un proceso de aprendizaje estructurado en arquitecturas de integración Java/MySQL/Jira
 
 > ℹ️ ¿Eres reclutador y llegaste directamente aquí? 
-> Este proyecto forma parte de mi portfolio completo: [bit.ly/yago-itsm-portfolio](https://bit.ly/yago-itsm-portfolio)
+> Este proyecto forma parte de mi portfolio completo: [bit.ly/yago-itsm-portfolio]([https://bit.ly/yago-itsm-portfolio](https://yagourrutia.com/)
 > Allí encontrarás contexto, demo visual y mi propuesta de valor como IT Service Coordinator.
+
+> ⚠️ **Estado Actual (Abril 2026):** 
+> Este componente (Receptor) es una solución funcional (MVP) dentro del Ecosistema Clorian. 
+> - **Arquitectura:** Se utiliza Spring Boot como framework web, pero se emplea JDBC nativo (`java.sql`) en lugar de ORMs para tener control explícito sobre las transacciones y el parseo de respuestas de Jira.
+> - **Procesamiento Asíncrono:** Se ha implementado un patrón "fire-and-forget" (hilo separado) para garantizar respuesta inmediata a Jira (<100ms), evitando timeouts.
+> - **Seguridad:** La validación de firma HMAC-SHA256 está documentada en la sección "Seguridad" como recomendación para entornos de producción (Roadmap v2.0), no implementada en esta v1.0.
+> 
+> *Este código demuestra mi capacidad para integrar APIs REST, gestionar concurrencia básica y persistencia en un entorno Java moderno.*
 
 # README: Jira Webhook Receiver
 
