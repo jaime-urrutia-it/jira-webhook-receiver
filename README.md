@@ -1,4 +1,4 @@
-Proyecto de recualificación ITSM desarrollado con asistencia de IA generativa. El código fue revisado, comprendido y validado manualmente como parte de un proceso de aprendizaje estructurado en arquitecturas de integración Java/MySQL/Jira
+Proyecto de integración de sincronización de tickets con flujo integral de incidencia (detección → webhook Jira → resolución→ cierre) desarrollado con asistencia de IA generativa. El código fue revisado, comprendido y validado manualmente como parte de un proceso de aprendizaje estructurado en arquitecturas de integración Java/MySQL/Jira
 
 > ℹ️ ¿Eres reclutador y llegaste directamente aquí? 
 > Este proyecto forma parte de mi portfolio completo: [Ver portfolio completo](https://yagourrutia.com)
