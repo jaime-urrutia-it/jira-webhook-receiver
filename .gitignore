@@ -1,0 +1,35 @@
+# === Artefactos compilados ===
+target/
+out/
+bin/
+*.class
+*.jar
+*.war
+*.ear
+
+# === IDE ===
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+
+# === Entorno y credenciales (NUNCA commitear) ===
+.env
+*.env.local
+application-local.properties
+credentials.properties
+*.pem
+*.key
+
+# === Sistema ===
+.DS_Store
+Thumbs.db
+*.log
+logs/
+
+# === Maven / Gradle ===
+dependency-reduced-pom.xml
+build/
