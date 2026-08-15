@@ -186,6 +186,20 @@ Para sincronizacion bidireccional completa:
 
 ---
 
+## ⚠️ Limitaciones Conocidas del MVP (Agosto 2026)
+
+Este proyecto es un MVP de demostración, no un sistema de producción. Las siguientes limitaciones están documentadas intencionalmente como parte del roadmap de maduración:
+
+| Limitación | Impacto | Plan de mitigación |
+|---|---|---|
+| Endpoint webhook sin autenticación HMAC | Cualquiera podría enviar payloads falsos | Implementar validación HMAC-SHA256 (ver Roadmap) |
+| Procesamiento asíncrono con `new Thread()` sin pool | Riesgo bajo carga alta | Migrar a `ExecutorService` con pool controlado |
+| UPSERT recursivo en receptor | Posible `StackOverflowError` bajo condiciones extremas | Refactorizar a bucle iterativo |
+| Polling cada 30s en modo standalone | Carga innecesaria sobre API de Jira | Aumentar intervalo o migrar a webhook-only |
+| Logging por consola (`System.out`) | Sin rotación ni niveles | Migrar a SLF4J + Logback |
+
+**Nota sobre el alcance:** Estas limitaciones están documentadas porque un entorno SSC/Business Operations valora tanto el control de un sistema como la honestidad sobre su estado. La decisión de abordarlas (o aceptarlas como riesgo controlado en un entorno de bajo volumen) corresponde al equipo de operaciones que adopte el proyecto.
+
 ## Roadmap
 
 ### Pista de Negocio
