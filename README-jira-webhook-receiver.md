@@ -186,10 +186,6 @@ Para sincronizacion bidireccional completa:
 
 ---
 
-## ⚠️ Limitaciones Conocidas del MVP (Agosto 2026)
-
-Este proyecto es un MVP de demostración, no un sistema de producción. Las siguientes limitaciones están documentadas intencionalmente como parte del roadmap de maduración:
-
 ### ⚠️ Limitaciones Conocidas del MVP (Agosto 2026)
 
 Este proyecto es un MVP de demostración, no un sistema de producción. Las siguientes limitaciones están documentadas intencionalmente como parte del roadmap de maduración:
