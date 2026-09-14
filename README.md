@@ -1,225 +1,166 @@
 # Jira Webhook Receiver
+![Java](https://img.shields.io/badge/Java-17%2B-blue)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.3-6DB33F.svg)
+![MySQL](https://img.shields.io/badge/MySQL-5.7+-4479A1.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-Servicio **Spring Boot** receptor de webhooks para sincronizacion bidireccional entre **Jira Cloud/Server** y bases de datos **MySQL**. Este microservicio recibe eventos en tiempo real de Jira y actualiza automaticamente el estado de tickets en la base de datos local.
+Módulo de integración Spring Boot que actúa como **receptor** en la arquitectura de sincronización bidireccional Clorian. Elimina la latencia operativa entre plataformas recibiendo actualizaciones de Jira en tiempo real y persistiéndolas en MySQL.
 
-> **Parte de un Ecosistema**: Este proyecto trabaja junto con [Clorian DB Connector](https://github.com/jaime-urrutia-it/clorian-db-connector) para lograr sincronizacion **bidireccional completa** entre MySQL y Jira.
-> - **Clorian DB Connector**: MySQL → Jira (envio de tickets, polling de estados)
-> - **Este proyecto (Webhook Receiver)**: Jira → MySQL (recepcion de cambios en tiempo real)
+> **Parte de un Ecosistema:** Este es el RECEPTOR (Jira → MySQL). Para una sincronización completa, debe desplegarse junto con el EMISOR ([Clorian DB Connector](https://github.com/jaime-urrutia-it/clorian-db-connector)).
 
-> **Contexto de negocio**: Mas alla de la integracion tecnica, este proyecto demuestra como los webhooks en tiempo real eliminan la latencia operativa entre plataformas, un patron aplicable a cualquier entorno de SSC o Business Operations donde la inmediatez de la informacion es critica.
-
-> ⚠️ **Estado Actual (Agosto 2026):**  
-> Este componente es una solucion funcional (MVP) dentro del Ecosistema Clorian. 
-> - **Arquitectura:** Spring Boot como framework web, con JDBC nativo (`java.sql`) en lugar de ORMs para control explícito sobre transacciones y parseo.
-> - **Procesamiento Asincrono:** Patron "fire-and-forget" (hilo separado) para respuesta inmediata a Jira (<100ms).
-> - **Seguridad:** La validacion de firma HMAC-SHA256 esta documentada como mejora recomendada para produccion (Roadmap v2.0), no implementada en esta v1.0.
-
----
-
-## Stack Tecnologico
-
-| Tecnologia | Version | Descripcion |
-|------------|---------|-------------|
-| **Spring Boot** | 3.3.3 | Framework web con Tomcat embebido |
-| **Java** | 17+ | JDK requerido (LTS) |
-| **Spring JDBC** | 3.3.3 | Conectividad a BD |
-| **MySQL Connector/J** | 8.x | Driver JDBC oficial |
-| **org.json** | 20231013 | Parseo de payloads JSON |
-| **Logback** | 1.4.x | Logging con rotacion de archivos |
-| **Maven** | 3.8+ | Gestion de dependencias |
+⚠️ **Estado Actual (Agosto 2026):**
+- Este proyecto es un MVP funcional para demostración técnica.
+- Las credenciales de base de datos están externalizadas vía variables de entorno.
+- Para ver el código real, consulta los archivos `.java` en `src/main/java/`.
 
 ---
 
-## Estructura del Proyecto
+## 🎯 Propósito y Arquitectura
 
+### Contexto de Negocio
+En entornos de SSC y Business Operations, la inmediatez de la información es crítica. Este componente demuestra cómo el uso de webhooks (en lugar de polling constante) elimina la latencia operativa, garantiza la trazabilidad de los cambios de estado y reduce la carga innecesaria sobre las APIs externas, un patrón aplicable a cualquier flujo de negocio que requiera sincronización en tiempo real.
+
+### Flujo de Trabajo
+```text
+1. Usuario cambia el estado de un issue en Jira Cloud.
+2. Jira dispara un evento HTTP POST al endpoint /api/jira-webhook.
+3. Spring Boot recibe la petición y la encola en un ExecutorService (procesamiento asíncrono).
+4. Se responde a Jira inmediatamente con HTTP 200 OK (latencia < 100ms).
+5. En segundo plano, se ejecuta un UPSERT en MySQL para actualizar el estado del ticket.
 ```
+
+---
+
+## ✅ Características Principales
+
+- **Procesamiento Asíncrono:** Uso de `ExecutorService` con pool de hilos fijo para manejar picos de carga sin bloquear el hilo principal de Spring Boot.
+- **UPSERT Optimizado:** Implementación de `INSERT ... ON DUPLICATE KEY UPDATE` en una única sentencia SQL, eliminando riesgos de recursión o condiciones de carrera.
+- **Mapeo de Estados Completo:** Traducción robusta de los 5 estados de Jira (To Do, In Progress, Waiting for Customer, Resolved, Closed) al ENUM de MySQL.
+- **Seguridad y Configuración:** Credenciales de base de datos externalizadas mediante variables de entorno (`MYSQL_USER`, `MYSQL_PASSWORD`), con fallback local solo para desarrollo.
+- **Logging Estructurado:** Configuración de Logback con rotación diaria y archivos independientes (`jira-webhook-receiver.log`, `sync-webhook.log`).
+
+---
+
+## 🛠️ Stack Tecnológico
+
+| Tecnología | Versión | Propósito |
+|---|---|---|
+| Framework | Spring Boot 3.3.3 | Motor web y gestión de dependencias |
+| Lenguaje | Java 17+ | Lógica de negocio y procesamiento asíncrono |
+| Base de Datos | MySQL 5.7+ | Persistencia de estados sincronizados |
+| Driver JDBC | MySQL Connector/J 8.x | Conectividad con la base de datos |
+| Build Tool | Maven 3.8+ | Compilación y empaquetado |
+
+---
+
+## 📂 Estructura del Proyecto
+
+```text
 jira-webhook-receiver/
-├── pom.xml                           # Configuracion Maven
-└── src/main/
-    ├── java/com/clorian/webhook/
-    │   ├── WebhookApplication.java      # Clase principal Spring Boot
-    │   └── WebhookController.java       # Endpoint receptor /api/jira-webhook
-    └── resources/
-        ├── application.properties       # Configuracion BD y servidor
-        └── logback.xml                  # Rotacion de logs (10MB/30 dias)
+ ├── src/main/
+ │   ├── java/com/clorian/webhook/
+ │   │   ├── WebhookApplication.java       # Punto de entrada de Spring Boot
+ │   │   └── WebhookController.java        # Endpoint y lógica de procesamiento
+ │   └── resources/
+ │       ├── application.properties        # Configuración externalizada
+ │       └── logback.xml                   # Configuración de logging con rotación
+ ├── pom.xml                               # Dependencias de Maven
+ └── README.md
 ```
 
 ---
 
-## Instalacion y Configuracion
+## 🚀 Instalación y Configuración
 
-### 1. Requisitos previos
+### 1. Requisitos Previos
 - Java JDK 17 o superior
-- MySQL Server 5.7+ con base de datos `clorian_db` (misma BD que Clorian DB Connector)
+- MySQL Server 5.7+ con la base de datos `clorian_db` creada
 - Maven 3.8+
-- Acceso de administrador a Jira Cloud/Server para configurar webhooks
 
-### 2. Configuracion de Base de Datos
+### 2. Configuración de la Base de Datos
+Asegúrate de que la tabla `SupportTickets` tenga el ENUM actualizado con los 5 estados:
+```sql
+ALTER TABLE SupportTickets 
+MODIFY COLUMN status ENUM('Open', 'In Progress', 'Waiting for Customer', 'Resolved', 'Closed') DEFAULT 'Open';
+```
 
-Asegurate de que exista la tabla `SupportTickets` (compatible con Clorian DB Connector). El DDL completo esta disponible en el [README del ecosistema](https://github.com/jaime-urrutia-it/clorian-ecosystem).
-
-### 3. Configuracion del Servicio
-
-Edita `src/main/resources/application.properties`:
-
+### 3. Externalización de Credenciales
+El proyecto está configurado para leer variables de entorno. En producción, no uses el archivo `application.properties` para secretos.
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/clorian_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+# src/main/resources/application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/clorian_db?useSSL=false&serverTimezone=UTC
 spring.datasource.username=${MYSQL_USER:root}
 spring.datasource.password=${MYSQL_PASSWORD:}
-logging.level.com.clorian.webhook=DEBUG
 server.port=8080
 ```
 
-**En produccion**, utiliza variables de entorno para las credenciales (`MYSQL_USER`, `MYSQL_PASSWORD`).
-
-### 4. Compilacion y Ejecucion
-
+### 4. Compilación y Ejecución
 ```bash
-git clone https://github.com/jaime-urrutia-it/jira-webhook-receiver.git
-cd jira-webhook-receiver
+# Compilar el proyecto
 mvn clean package
+
+# Ejecutar (asegúrate de establecer las variables de entorno en tu sistema)
+export MYSQL_USER="tu_usuario"
+export MYSQL_PASSWORD="tu_contraseña"
 java -jar target/JiraWebhookReceiver-1.0.0.jar
 ```
 
-El servicio estara disponible en: `http://localhost:8080`
-
 ---
 
-## Configuracion del Webhook en Jira
+## 🔐 Seguridad
 
-### Jira Cloud (Atlassian)
+### Estado Actual
+✅ Credenciales de base de datos externalizadas vía variables de entorno.  
+✅ Uso de `PreparedStatement` para prevenir inyección SQL.  
+✅ Gestión segura de recursos con bloques `try-with-resources`.
 
-1. **Configuracion** → **Sistema** → **WebHooks** (requiere permisos de admin)
-2. Haz clic en **Crear Webhook**
-3. Configura:
-   - **Nombre**: `Clorian MySQL Sync`
-   - **URL**: `http://<tu-servidor>:8080/api/jira-webhook`
-   - Para desarrollo local con Jira Cloud, usa [ngrok](https://ngrok.com)
-   - **Eventos**: Issue → updated
-4. Guarda y habilita el webhook
-
----
-
-## API y Endpoints
-
-### POST /api/jira-webhook
-
-Recibe notificaciones de eventos de Jira.
-
-**Payload esperado** (`jira:issue_updated`):
-```json
-{
-  "webhookEvent": "jira:issue_updated",
-  "issue": {
-    "key": "KAN-123",
-    "fields": {
-      "status": { "name": "En curso" }
-    }
-  },
-  "changelog": {
-    "items": [{
-      "field": "status",
-      "toString": "En curso",
-      "fromString": "Tareas por hacer"
-    }]
-  }
-}
-```
-
-**Respuestas**:
-- `200 OK`: Procesamiento exitoso
-- `400 Bad Request`: Payload invalido
-- `500 Internal Server Error`: Error al actualizar MySQL
-
----
-
-## Mapeo de Estados
-
-El servicio traduce nombres de estado de Jira (espanol e ingles) a los valores ENUM de MySQL. La [tabla de mapeo unificada del ecosistema](https://github.com/jaime-urrutia-it/clorian-ecosystem#mapeo-de-estados-referencia-unica) es la referencia autorizada.
-
-| Estado en Jira (Espanol) | Estado en Jira (Ingles) | Estado MySQL |
-|---|---|---|
-| Tareas por hacer | To Do | `Open` |
-| En curso | In Progress | `In Progress` |
-| Esperando por el cliente | Waiting for Customer | `Waiting for Customer` |
-| Resuelta | Resolved | `Resolved` |
-| Cerrada | Closed | `Closed` |
-
----
-
-## Monitoreo y Logging
-
-El sistema genera logs en dos destinos:
-
-- **Principal**: `logs/jira-webhook-receiver.log` (rotacion cada 10MB, retencion 30 dias, max 1GB)
-- **Especifico de sincronizacion**: `logs/sync-webhook.log`
-
-```bash
-# Ver logs en tiempo real
-tail -f logs/jira-webhook-receiver.log
-
-# Filtrar errores de actualizacion
-grep "Error al actualizar MySQL" logs/jira-webhook-receiver.log
-```
-
----
-
-## Seguridad
-
-Para el estado actual y mejoras recomendadas, consultar la [seccion de seguridad del ecosistema](https://github.com/jaime-urrutia-it/clorian-ecosystem#seguridad).
-
-**Mejoras especificas de este componente:**
-- [ ] Validar firma del webhook HMAC-SHA256 (Jira envia `X-Hub-Signature`)
-- [ ] Restringir acceso al puerto 8080 solo a IPs de Atlassian
-- [ ] Implementar HTTPS obligatorio
-- [ ] Rate limiting para prevencion de DoS
-
----
-
-## Integracion con Clorian DB Connector
-
-Para sincronizacion bidireccional completa:
-
-1. **Despliega Clorian DB Connector** ([repo](https://github.com/jaime-urrutia-it/clorian-db-connector)): envía tickets nuevos de MySQL a Jira y sincroniza estados por polling.
-2. **Despliega este proyecto**: recibe cambios de estado de Jira via webhooks y actualiza MySQL inmediatamente.
-3. **Prevencion de ciclos infinitos**: el campo `last_sync_status` en MySQL evita bucles. Cuando el webhook actualiza MySQL, `status` y `last_sync_status` quedan iguales, por lo que el emisor no detecta cambio pendiente en su siguiente ciclo de polling.
+### Mejoras Recomendadas para Producción
+⚠️ Implementar validación de firma HMAC-SHA256 para verificar que los webhooks provienen genuinamente de Jira.  
+⚠️ Desplegar detrás de un proxy inverso (Nginx) con HTTPS obligatorio.  
+⚠️ Configurar una whitelist de IPs de Atlassian en el firewall del servidor.
 
 ---
 
 ### ⚠️ Limitaciones Conocidas del MVP (Agosto 2026)
-
 Este proyecto es un MVP de demostración, no un sistema de producción. Las siguientes limitaciones están documentadas intencionalmente como parte del roadmap de maduración:
 
 | Limitación | Impacto | Plan de mitigación |
 |---|---|---|
 | Endpoint webhook sin autenticación HMAC | Cualquiera podría enviar payloads falsos | Implementar validación HMAC-SHA256 (ver Roadmap) |
-| Logging por consola (`System.out`) en algunos puntos del código | Sin rotación ni niveles estructurados | Migrar completamente a SLF4J + Logback (logback.xml ya configurado) |
+| Logging por consola (`System.out`) en algunos puntos | Sin rotación ni niveles estructurados | Migrar completamente a SLF4J + Logback (`logback.xml` ya configurado) |
 | Polling cada 30s en modo standalone (DB Connector) | Carga innecesaria sobre API de Jira | Aumentar intervalo o migrar a webhook-only |
 
 **Nota sobre el alcance:** Estas limitaciones están documentadas porque un entorno SSC/Business Operations valora tanto el control de un sistema como la honestidad sobre su estado. La decisión de abordarlas (o aceptarlas como riesgo controlado en un entorno de bajo volumen) corresponde al equipo de operaciones que adopte el proyecto.
 
-## Roadmap
+---
+
+## 📈 Roadmap
 
 ### Pista de Negocio
-- [ ] Modulo de conciliacion O2C
-- [ ] Dashboard de KPIs de servicio
-- [ ] Reportes operativos exportables
-- [ ] Integracion con ERPs
+- [ ] Dashboard de KPIs de servicio (tiempo medio de sincronización, errores de webhook)
+- [ ] Alertas automáticas ante fallos de persistencia en MySQL
+- [ ] Integración con ERPs para ampliar el alcance operacional
 
-### Pista Tecnica
-- [ ] Validacion de firma de webhooks (HMAC-SHA256)
-- [ ] Autenticacion Bearer token opcional
-- [ ] Soporte para multiples proyectos de Jira
-- [ ] Endpoint de health check (`/actuator/health`)
-- [ ] Metricas con Micrometer/Prometheus
-- [ ] Dockerizacion oficial
-- [ ] Soporte para PostgreSQL
+### Pista Técnica
+- [ ] Validación de firma HMAC-SHA256 en webhooks
+- [ ] Dockerización oficial (Dockerfile + Docker Compose)
+- [ ] Cola de mensajes (RabbitMQ/ActiveMQ) para desacoplar recepción de procesamiento
+- [ ] Logging profesional completo (SLF4J + Logback en todos los puntos)
 
 ---
 
-## Licencia y Autoria
+## 🤝 Contribución
+Este es un proyecto abierto. Si encuentras bugs o tienes sugerencias:
+1. Abre un issue en este repositorio.
+2. Incluye logs relevantes y pasos para reproducir el error.
 
-Desarrollado por **Jaime Urrutia**  
-[GitHub](https://github.com/jaime-urrutia-it) | [Portfolio](https://yagourrutia.com) | [LinkedIn](https://www.linkedin.com/in/jaime-yago-urrutia-multilingue/)  
+---
 
-**Version**: 1.0.0 | **Ultima actualizacion**: Agosto 2026
+## 📄 Licencia y Autoría
+Distribuido bajo licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+
+Desarrollado por **Jaime (Yago) Urrutia**  
+[GitHub](https://github.com/jaime-urrutia-it) · [Portfolio](https://yagourrutia.com) · [LinkedIn](https://www.linkedin.com/in/jaime-urrutia-multilingue/?locale=es-ES)  
+Barcelona, España
+
+**Versión:** 1.0.0 | **Última actualización:** Agosto 2026
